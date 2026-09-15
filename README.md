@@ -75,28 +75,30 @@ con sólo latitud y longitud no hay dimensión por la cual agrupar.
 
 ![Vista Lógica](vista-logica.svg)
 
-Arquitectura General del Sistema (Figura 4). Diagrama de componentes con los clasificadores
-`«subsystem»` y `«component»`, como aconseja la plantilla en §6.
+Arquitectura General del Sistema (Figura 4), siguiendo la figura homónima de la plantilla.
 
-Las cajas se derivan, no se inventan: los componentes que la letra ya fija (§2 y §3.7), los
-conectores que fija (§4.1 — SOAP con la PDI, REST con el móvil, request-response con
-balanzas, mensajería con tracking), y los atributos de calidad que **obligan a separar**.
-El caso claro: §3.5.a exige que la detección sea asincrónica *y no degrade la recepción de
-los eventos*, y eso solo ya obliga a que el motor de detección no viva en el camino
-transaccional — el Worker no es gusto, es un requisito.
+**La descomposición de alto nivel es por subsistema funcional, no por capa técnica.** El
+componente central contiene los frontoffices y backoffices que la letra define en §3.1–3.6,
+más la fiscalización automática de §3.5. El componente móvil, los dos nodos periféricos y el
+simulador de la PDI quedan afuera y apuntan hacia el central.
 
-Cada dependencia lleva el número de RNF que fija ese conector, para que la trazabilidad a la
-letra se lea sin buscar.
+Tres cosas que esta vista **no** muestra, a propósito:
 
-**Observabilidad.** El identificador de correlación de §4.4.7 y el trace id de §4.4.9 son
-la misma cosa: se propaga `traceparent` (W3C Trace Context) desde el móvil hasta el nodo
-periférico y se emite en cada línea de log, con lo que un solo mecanismo cubre los dos
-requisitos. La instrumentación es OpenTelemetry — ésa es la decisión arquitectónica; los
-backends son intercambiables: Jaeger se cambia por Tempo tocando sólo el exportador del
-Collector, sin tocar ningún componente.
+- **Cómo se comunica cada cosa.** Los protocolos son §4.1 y la vista de distribución. Acá no
+  van etiquetas de conector.
+- **La comunicación entre las cajas internas.** Eso es el nivel de los refinamientos 6.2–6.4.
+- **La infraestructura.** El broker de mensajería, la persistencia y la plataforma de
+  observabilidad no son subsistemas funcionales; van en los refinamientos y en §7. Poner uno
+  solo de ellos acá —la observabilidad, por ejemplo— y no los otros sería incoherente.
+
+El **simulador de la PDI** es un subsistema propio, no un sistema externo: §3.7.1 dice que
+los servicios de la PDI no son públicos y que *"se deben implementar servicios que los
+suplanten respetando su interfaz"*.
 
 Pendientes: los refinamientos 6.2–6.4 (central en capas, ingesta y detección, móvil) y los
-diagramas de secuencia de 6.5.
+diagramas de secuencia de 6.5. La observabilidad —OpenTelemetry como instrumentación, con el
+`traceparent` de W3C sirviendo a la vez de identificador de correlación (§4.4.7) y de trace
+id (§4.4.9)— entra en el refinamiento de ingesta y en §7.
 
 ## Vista de Casos de Uso — SAD 3.2
 
