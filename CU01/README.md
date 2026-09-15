@@ -1,8 +1,5 @@
 # CU-01 — Autenticarse mediante Usuario gub.uy
 
-Delega la verificación de identidad en el proveedor de identidad de gub.uy y establece en
-carga.uy una sesión con los roles del usuario.
-
 | | |
 |---|---|
 | **Actor principal** | Ciudadano (responsable o chofer) / Funcionario de Fiscalización MTOP |
@@ -11,66 +8,52 @@ carga.uy una sesión con los roles del usuario.
 | **Relación** | `«include»` de todos los CU no públicos del frontoffice y del móvil |
 | **Letra** | Sec. 3.1.1, 3.2.1, 3.3.1, 3.4.1, 3.7.4 |
 
-## Diagrama de casos de uso
+El diagrama está en la [Vista de Casos de Uso](../README.md) del repo, no acá: es una vista
+única de toda la plataforma, no una por caso de uso.
 
-![CU-01 — diagrama de casos de uso](cu01.svg)
+## Descripción
 
-Con las relaciones `«include»` de todos los casos de uso no públicos:
+Delega la verificación de identidad en el proveedor de identidad de gub.uy y establece en
+carga.uy una sesión con los roles del usuario.
 
-![CU-01 con las relaciones «include»](cu01-include.svg)
+## Pre-condiciones
 
-Los dos SVG los genera [`tools/uml-usecase.js`](../tools/uml-usecase.js) — sin dependencias,
-`node tools/uml-usecase.js` desde la raíz del repo.
+- El usuario posee Usuario gub.uy vigente.
+- carga.uy está registrado como cliente ante el proveedor, con sus credenciales fuera del
+  repositorio de código (RNF 4.2.5).
 
-## Decisiones del diagrama
+## Flujo de eventos
 
-- **CU-03 no está conectado a CU-01**, a propósito: el backoffice usa mecanismo interno
-  (Sec. 3.6.1), no gub.uy.
-- **CU-18 y CU-19 tampoco**: son públicos y no requieren autenticación.
-- **Todos los actores van fuera de la frontera del sistema.** `Usuario gub.uy` y
-  `PDI / AGESIC` son actores secundarios (sistemas externos), no casos de uso.
-- Dirección de las relaciones: en `«include»` la flecha va **del caso base al incluido**;
-  en `«extend»`, **del extensor al extendido**. La asociación actor–caso de uso es una
-  línea sin punta.
-- CU-01 va resaltado por ser **caso de uso crítico** para la arquitectura.
+1. El usuario solicita ingresar.
+2. El sistema redirige al proveedor de identidad gub.uy.
+3. El usuario se autentica con el nivel de garantía requerido.
+4. gub.uy redirige de vuelta con un código de autorización.
+5. El sistema canjea el código por los tokens, valida firma, emisor, audiencia y vigencia, y
+   extrae cédula y correo.
+6. El sistema busca un perfil local asociado a esa cédula.
+7. Establece la sesión, resuelve roles y permisos, y redirige a la vista correspondiente.
+8. Registra el ingreso en el log estructurado con identificador de correlación (RNF 4.4.7).
 
-> `«uses»` es UML 1.x. Desde UML 2 son `«include»` y `«extend»`. La plantilla del SAD
-> (Sec. 3.2) lista sólo Caso de Uso, Actor, Asociación y Frontera del Sistema, así que
-> estas relaciones son un agregado nuestro, no un requisito.
+### Flujos alternativos y excepciones
 
-<details>
-<summary>Fuente Mermaid (alternativa)</summary>
+| | |
+|---|---|
+| **6a** | No existe perfil local: se ejecuta CU-02 y se continúa en el paso 7. |
+| **6b** | Ciudadano sin empresa asociada: sesión con rol mínimo; se informa que un funcionario debe asociarlo a una empresa (Sec. 3.4.2) y sólo quedan habilitadas las funcionalidades públicas. No aplica al Funcionario MTOP, que no se asocia a ninguna empresa y cuyo rol se resuelve por su pertenencia al organismo. |
+| **3a** | El usuario cancela o falla la autenticación: retorno a la portada pública, sin sesión. |
+| **5a** | Token inválido o expirado: se aborta, se registra el evento de seguridad, no se crea sesión. |
+| **2a/4a** | gub.uy no responde: se aplica timeout y se muestra degradación; las funcionalidades públicas siguen disponibles (RNF 4.3.5). |
 
-Mermaid no tiene diagrama de casos de uso UML: no hay monigotes, los casos de uso no son
-elipses y con muchas relaciones `«include»` convergiendo queda ilegible. Se mantiene sólo
-como versión rápida de editar.
+### Variante móvil
 
-```mermaid
-flowchart LR
-    classDef actor   fill:#ffffff,stroke:#334155,stroke-width:1.5px,color:#0f172a
-    classDef uc      fill:#eef4ff,stroke:#94a3b8,color:#0f172a
-    classDef critico fill:#dbeafe,stroke:#1d4ed8,stroke-width:3px,color:#0f172a
+| | |
+|---|---|
+| **V1** | El flujo se abre en el navegador del sistema y la app canjea el código contra el componente central vía REST sobre HTTPS (RNF 4.1.2), obteniendo token de acceso y de refresco, que almacena de forma segura junto al perfil y los viajes asignados. |
+| **V1.a** | Apertura sin conectividad con sesión previa vigente: se permite acceso local a la Guía descargada y al registro de eventos, sin contactar al componente central (Sec. 3.3.4.a/b). |
+| **V1.b** | Sin conectividad y sin sesión previa: se deniega el acceso. |
 
-    RESP["Responsable<br/>de empresa"]:::actor
-    CHOF["Chofer"]:::actor
-    FUNC["Funcionario de<br/>Fiscalizacion MTOP"]:::actor
+## Post-condiciones
 
-    subgraph SYS["carga.uy"]
-        direction TB
-        CU01(["CU-01 · Autenticarse mediante Usuario gub.uy"]):::critico
-        CU02(["CU-02 · Completar perfil del ciudadano en el primer ingreso"]):::uc
-    end
-
-    GUB["Usuario gub.uy<br/>(ID Uruguay)"]:::actor
-    PDI["PDI / AGESIC<br/>(DNIC)"]:::actor
-
-    RESP --- CU01
-    CHOF --- CU01
-    FUNC --- CU01
-    CU01 --- GUB
-    CU02 --- PDI
-
-    CU02 -.->|"«extend»"| CU01
-```
-
-</details>
+- Existe una sesión autenticada con identidad y roles resueltos, o ninguna sesión.
+- El evento de autenticación queda registrado.
+- El sistema no almacena credenciales del usuario.

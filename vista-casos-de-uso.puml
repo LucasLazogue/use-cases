@@ -1,0 +1,162 @@
+@startuml vista-casos-de-uso
+' ---------------------------------------------------------------------------
+' carga.uy - Vista de Casos de Uso
+' Laboratorio TSE 2026 - Documento de Arquitectura de Software, seccion 3.2
+'
+' Elementos segun la plantilla del SAD: Caso de Uso, Actor, Asociacion y
+' Frontera del Sistema. Las relaciones <<include>> / <<extend>> se presentan
+' aparte, en relaciones-include-extend.puml, para no ensuciar esta vista.
+' ---------------------------------------------------------------------------
+
+left to right direction
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+skinparam ArrowColor #475569
+
+skinparam actor {
+  BorderColor #1E293B
+  BackgroundColor #FFFFFF
+  FontColor #1E293B
+  FontStyle bold
+  BorderColor<<sistema>> #64748B
+  BackgroundColor<<sistema>> #F1F5F9
+  FontColor<<sistema>> #475569
+}
+skinparam usecase {
+  BackgroundColor #F1F5F9
+  BorderColor #94A3B8
+  FontColor #1E293B
+  BorderThickness 1.2
+  BackgroundColor<<critico>> #DBEAFE
+  BorderColor<<critico>> #1D4ED8
+  BorderThickness<<critico>> 2.5
+  BackgroundColor<<propuesto>> #FFFFFF
+  BorderColor<<propuesto>> #CBD5E1
+  FontColor<<propuesto>> #64748B
+}
+skinparam rectangle {
+  BorderColor #94A3B8
+  BackgroundColor #FFFFFF
+  FontColor #334155
+  FontSize 15
+  FontStyle bold
+}
+skinparam package {
+  BorderColor #E2E8F0
+  BackgroundColor #FFFFFF
+  FontColor #64748B
+  FontSize 12
+}
+
+' --------------------------- actores ---------------------------
+' primarios: inician los casos de uso
+actor "Responsable\nde empresa" as RESP
+actor "Chofer" as CHOF
+actor "Funcionario de\nFiscalizacion MTOP" as FUNC
+actor "Autoridad MTOP" as AUT
+actor "Administrador" as ADM
+actor "Publico general /\nempresa cliente" as PUB
+' secundarios: sistemas externos y nodos perifericos
+actor "PDI / AGESIC\n(DNIC)" as PDI <<sistema>>
+actor "Usuario gub.uy\n(ID Uruguay)" as GUB <<sistema>>
+actor "Sistema de Balanzas" as BAL <<sistema>>
+actor "Sistema de Tracking" as TRK <<sistema>>
+
+' --------------------------- frontera del sistema ---------------------------
+rectangle "carga.uy" {
+
+  package "Frontoffice empresa" {
+    usecase "CU-05 · Consultar y actualizar\nel perfil de la empresa" as CU05
+    usecase "CU-06 · Gestionar vehiculos\ny habilitaciones (ABM)" as CU06
+    usecase "CU-07 · Registrar Guia\ny asignar el viaje" as CU07
+    usecase "CU-12 · Presentar descargo sobre\nun caso de fiscalizacion" as CU12
+  }
+
+  package "Componente movil" {
+    usecase "CU-08 · Ejecutar el viaje desde\nel componente movil" as CU08
+    usecase "CU-09 · Sincronizar los eventos\ndel componente movil" as CU09 <<critico>>
+  }
+
+  package "Frontoffice fiscalizacion" {
+    usecase "CU-04 · Gestionar empresa de\ntransporte y sus usuarios" as CU04
+    usecase "CU-13 · Resolver el caso\nde fiscalizacion" as CU13
+    usecase "CU-14 · Fiscalizar permisos y\nestado de los vehiculos" as CU14
+    usecase "CU-15 · Monitorear viajes\nen curso y pesajes" as CU15
+  }
+
+  package "Autenticacion" {
+    usecase "CU-02 · Completar perfil del\nciudadano en el primer ingreso" as CU02
+    usecase "CU-01 · Autenticarse\nmediante Usuario gub.uy" as CU01
+    usecase "CU-03 · Autenticarse en el backoffice\nmediante mecanismo interno" as CU03
+  }
+
+  package "Backoffice" {
+    usecase "CU-16 · Consultar reportes\ngerenciales y exportarlos" as CU16
+    usecase "CU-20 · Gestionar usuarios\ny roles" as CU20 <<propuesto>>
+    usecase "CU-17 · Parametrizar las\nreglas de fiscalizacion" as CU17
+    usecase "CU-21 · Gestionar nodos\nperifericos" as CU21 <<propuesto>>
+  }
+
+  package "Frontoffice publico" {
+    usecase "CU-18 · Validar los permisos de\nuna empresa transportista" as CU18
+    usecase "CU-19 · Consultar los listados\nde informacion publica" as CU19
+  }
+
+  package "Deteccion automatica" {
+    usecase "CU-11 · Detectar un incumplimiento\ny generar el caso" as CU11 <<critico>>
+    usecase "CU-10 · Ingerir y procesar\neventos de tracking" as CU10
+  }
+}
+
+' --------------------------- asociaciones ---------------------------
+' Responsable de empresa
+RESP -- CU01
+RESP -- CU02
+RESP -- CU05
+RESP -- CU06
+RESP -- CU07
+RESP -- CU12
+RESP -- CU11 : recibe la\nnotificacion
+
+' Chofer
+CHOF -- CU01
+CHOF -- CU02
+CHOF -- CU08
+CHOF -- CU09
+
+' Funcionario de Fiscalizacion
+FUNC -- CU01
+FUNC -- CU04
+FUNC -- CU13
+FUNC -- CU14
+FUNC -- CU15
+
+' Autoridad MTOP y Administrador (backoffice, autenticacion interna)
+AUT -- CU03
+AUT -- CU16
+ADM -- CU03
+ADM -- CU17
+ADM -- CU20
+ADM -- CU21
+
+' Publico general (sin autenticacion)
+PUB -- CU18
+PUB -- CU19
+
+' Sistemas externos y nodos perifericos
+GUB -- CU01
+PDI -- CU02
+BAL -- CU11
+TRK -- CU10
+
+legend bottom
+  <<critico>> caso de uso critico para la arquitectura: se detalla en las secciones 3.3 y 3.4 del SAD.
+  <<propuesto>> exigido por la letra (3.6.3 y 3.6.4) y todavia sin caso de uso redactado.
+  CU-10 y CU-11 no tienen actor humano que los inicie: los disparan los nodos perifericos y un temporizador.
+  Las relaciones <<include>> y <<extend>> se presentan en la figura relaciones-include-extend.
+endlegend
+
+@enduml

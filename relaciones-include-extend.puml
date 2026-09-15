@@ -1,0 +1,104 @@
+@startuml relaciones-include-extend
+' ---------------------------------------------------------------------------
+' carga.uy - Relaciones <<include>> y <<extend>> entre casos de uso
+' Complementa la Vista de Casos de Uso (vista-casos-de-uso.puml).
+'
+' Direccion de las relaciones (UML 2):
+'   <<include>>  va del caso base AL caso incluido: el base siempre lo ejecuta.
+'   <<extend>>   va del caso extensor AL caso extendido: se ejecuta solo bajo
+'                cierta condicion.
+' En UML 1.x la relacion <<include>> se llamaba <<uses>>.
+' ---------------------------------------------------------------------------
+
+left to right direction
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+skinparam ArrowColor #64748B
+skinparam ArrowFontColor #64748B
+skinparam ArrowFontSize 11
+
+skinparam usecase {
+  BackgroundColor #F1F5F9
+  BorderColor #94A3B8
+  FontColor #1E293B
+  BorderThickness 1.2
+  BackgroundColor<<critico>> #DBEAFE
+  BorderColor<<critico>> #1D4ED8
+  BorderThickness<<critico>> 2.5
+  BackgroundColor<<propuesto>> #FFFFFF
+  BorderColor<<propuesto>> #CBD5E1
+  FontColor<<propuesto>> #64748B
+}
+skinparam rectangle {
+  BorderColor #94A3B8
+  BackgroundColor #FFFFFF
+  FontColor #334155
+  FontSize 15
+  FontStyle bold
+}
+skinparam package {
+  BorderColor #E2E8F0
+  BackgroundColor #FFFFFF
+  FontColor #64748B
+  FontSize 12
+}
+
+rectangle "carga.uy" {
+
+  package "Casos de uso del frontoffice y del movil" {
+    usecase "CU-04 · Gestionar empresa de\ntransporte y sus usuarios" as CU04
+    usecase "CU-05 · Consultar y actualizar\nel perfil de la empresa" as CU05
+    usecase "CU-06 · Gestionar vehiculos\ny habilitaciones (ABM)" as CU06
+    usecase "CU-07 · Registrar Guia\ny asignar el viaje" as CU07
+    usecase "CU-08 · Ejecutar el viaje desde\nel componente movil" as CU08
+    usecase "CU-09 · Sincronizar los eventos\ndel componente movil" as CU09 <<critico>>
+    usecase "CU-12 · Presentar descargo sobre\nun caso de fiscalizacion" as CU12
+    usecase "CU-13 · Resolver el caso\nde fiscalizacion" as CU13
+    usecase "CU-14 · Fiscalizar permisos y\nestado de los vehiculos" as CU14
+    usecase "CU-15 · Monitorear viajes\nen curso y pesajes" as CU15
+  }
+
+  package "Casos de uso del backoffice" {
+    usecase "CU-16 · Consultar reportes\ngerenciales y exportarlos" as CU16
+    usecase "CU-17 · Parametrizar las\nreglas de fiscalizacion" as CU17
+    usecase "CU-20 · Gestionar usuarios\ny roles" as CU20 <<propuesto>>
+    usecase "CU-21 · Gestionar nodos\nperifericos" as CU21 <<propuesto>>
+  }
+
+  package "Autenticacion" {
+    usecase "CU-01 · Autenticarse\nmediante Usuario gub.uy" as CU01
+    usecase "CU-03 · Autenticarse en el backoffice\nmediante mecanismo interno" as CU03
+    usecase "CU-02 · Completar perfil del\nciudadano en el primer ingreso" as CU02
+  }
+}
+
+' --------------------------- include ---------------------------
+CU04 ..> CU01 : <<include>>
+CU05 ..> CU01 : <<include>>
+CU06 ..> CU01 : <<include>>
+CU07 ..> CU01 : <<include>>
+CU08 ..> CU01 : <<include>>
+CU09 ..> CU01 : <<include>>
+CU12 ..> CU01 : <<include>>
+CU13 ..> CU01 : <<include>>
+CU14 ..> CU01 : <<include>>
+CU15 ..> CU01 : <<include>>
+
+CU16 ..> CU03 : <<include>>
+CU17 ..> CU03 : <<include>>
+CU20 ..> CU03 : <<include>>
+CU21 ..> CU03 : <<include>>
+
+' --------------------------- extend ---------------------------
+CU02 ..> CU01 : <<extend>>
+
+legend bottom
+  CU-18 y CU-19 no aparecen: son publicos y no incluyen autenticacion.
+  CU-10 y CU-11 tampoco: los disparan los nodos perifericos, no un usuario autenticado.
+  CU-02 extiende a CU-01 porque solo se ejecuta en el primer ingreso del ciudadano.
+endlegend
+
+@enduml
