@@ -77,10 +77,19 @@ con sólo latitud y longitud no hay dimensión por la cual agrupar.
 
 Arquitectura General del Sistema (Figura 4), siguiendo la figura homónima de la plantilla.
 
-**La descomposición de alto nivel es por subsistema funcional, no por capa técnica.** El
-componente central contiene los frontoffices y backoffices que la letra define en §3.1–3.6,
-más la fiscalización automática de §3.5. El componente móvil, los dos nodos periféricos y el
-simulador de la PDI quedan afuera y apuntan hacia el central.
+**La descomposición de alto nivel es por subsistema funcional, no por capa técnica**, y sale
+directamente de la letra:
+
+| Subsistema del central | De dónde sale |
+|---|---|
+| Frontoffice Ciudadanos | §3.1 *Ciudadanos — Frontoffice (**público**)* y §3.2 *Ciudadanos — Frontoffice*. El público **no es un subsistema aparte**: es la parte pública del mismo frontoffice |
+| Frontoffice Funcionarios | §3.4 *Funcionarios — Frontoffice* |
+| Backoffice | §3.6. Es **uno solo**: *"el backoffice Web es utilizado tanto por las autoridades como por los administradores, y las funcionalidades disponibles para cada usuario deben estar determinadas por su rol"* |
+| Servicios REST | RNF 4.1.2: *"la comunicación entre el componente móvil y el componente central debe realizarse mediante Web Services REST"*. Es lo que consume el móvil |
+| Fiscalización Automática | §3.5 |
+
+El componente móvil (§3.3), los dos nodos periféricos y el simulador de la PDI quedan afuera.
+El móvil apunta a **Servicios REST**, no al contenedor: es el subsistema que consume.
 
 Tres cosas que esta vista **no** muestra, a propósito:
 

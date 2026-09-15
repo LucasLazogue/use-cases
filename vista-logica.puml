@@ -3,15 +3,20 @@
 ' carga.uy - Vista Logica, Arquitectura General del Sistema
 ' Laboratorio TSE 2026 - SAD seccion 6.1 (Figura 4)
 '
-' Sigue la Figura 4 de la plantilla (sad_tse_2025.pdf):
-'   - el componente central contiene los subsistemas funcionales
-'   - los actores y los subsistemas externos apuntan HACIA el central
-'   - sin etiquetas de protocolo: como se comunican es 4.1 y la vista de
-'     distribucion, no esta vista
-'   - sin comunicacion dibujada entre las cajas internas: eso es 6.2-6.4
+' Los subsistemas del componente central salen de la Seccion 2 y de los
+' titulos de la Seccion 3 de la letra:
+'   3.1 Ciudadanos - Frontoffice (publico)  \ un unico Frontoffice Ciudadanos
+'   3.2 Ciudadanos - Frontoffice            /
+'   3.3 Ciudadanos - Componente Movil        -> fuera del central
+'   3.4 Funcionarios - Frontoffice           -> Frontoffice Funcionarios
+'   3.5 Fiscalizacion Automatica             -> Fiscalizacion Automatica
+'   3.6 Autoridades y Administradores -
+'       Backoffice                           -> un unico Backoffice, por rol
+'   RNF 4.1.2: el movil consume Web Services REST del central
 '
-' El broker, la persistencia y la plataforma de observabilidad no aparecen
-' aca: son infraestructura, y van en los refinamientos y en la seccion 7.
+' Como en la Figura 4 de la plantilla: sin etiquetas de protocolo, sin
+' comunicacion entre las cajas internas y sin infraestructura (broker,
+' persistencia y observabilidad van en 6.2-6.4 y en la seccion 7).
 ' ---------------------------------------------------------------------------
 
 skinparam backgroundColor #FFFFFF
@@ -35,46 +40,45 @@ skinparam actor {
 ' =========================== actores ===========================
 actor "Publico general /\nempresa cliente" as PUB
 actor "Responsable\nde empresa" as RESP
-actor "Chofer" as CHOF
 actor "Funcionario" as FUNC
 actor "Autoridad" as AUT
 actor "Administrador" as ADM
+actor "Chofer" as CHOF
 
 ' =========================== componente movil ===========================
-rectangle "<<subsystem>>\nMovil" as MOV
+rectangle "<<subsystem>>\nComponente Movil" as MOV
 
 ' =========================== componente central ===========================
 rectangle "<<subsystem>>\ncomponente central" as CENTRAL {
-  rectangle "<<subsystem>>\nFrontoffice\nPublico" as FOPUB
-  rectangle "<<subsystem>>\nFrontoffice\nEmpresas" as FOEMP
-  rectangle "<<subsystem>>\nFrontoffice\nFiscalizacion" as FOFIS
-  rectangle "<<subsystem>>\nBackoffice\nAutoridades" as BOAUT
-  rectangle "<<subsystem>>\nBackoffice\nAdministradores" as BOADM
+  rectangle "<<subsystem>>\nFrontoffice\nCiudadanos" as FOCIU
+  rectangle "<<subsystem>>\nFrontoffice\nFuncionarios" as FOFUN
+  rectangle "<<subsystem>>\nBackoffice" as BACK
+  rectangle "<<subsystem>>\nServicios REST" as API
   rectangle "<<subsystem>>\nFiscalizacion\nAutomatica" as FISCA
 }
 
-' =========================== subsistemas externos ===========================
+' =========================== subsistemas perifericos ===========================
 rectangle "<<subsystem>>\nNodo Periferico\nBalanzas" as NBAL
 rectangle "<<subsystem>>\nNodo Periferico\nTracking" as NTRK
 rectangle "<<subsystem>>\nSimulador PDI" as SPDI
 rectangle "<<actor>>\nUsuario gub.uy" as GUB
 
-' grilla 3x2 dentro del central, como en la Figura 4
-FOPUB -[hidden]right- FOEMP
-FOEMP -[hidden]right- FOFIS
-FOPUB -[hidden]down- BOAUT
-BOAUT -[hidden]right- BOADM
-BOADM -[hidden]right- FISCA
+' grilla dentro del central
+FOCIU -[hidden]right- FOFUN
+FOFUN -[hidden]right- BACK
+FOCIU -[hidden]down- API
+API -[hidden]right- FISCA
 
 ' =========================== asociaciones ===========================
-PUB --> FOPUB
-RESP --> FOEMP
-FUNC --> FOFIS
-AUT --> BOAUT
-ADM --> BOADM
+PUB --> FOCIU
+RESP --> FOCIU
+FUNC --> FOFUN
+AUT --> BACK
+ADM --> BACK
 CHOF --> MOV
 
-MOV --> CENTRAL
+MOV --> API
+
 NBAL --> CENTRAL
 NTRK --> CENTRAL
 SPDI --> CENTRAL
