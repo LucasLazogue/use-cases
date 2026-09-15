@@ -12,37 +12,37 @@
 
 left to right direction
 
+' Mismo estilo que las figuras de la plantilla: blanco y negro.
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam defaultFontName "Segoe UI"
 skinparam defaultFontSize 12
-skinparam ArrowColor #64748B
-skinparam ArrowFontColor #64748B
+skinparam roundcorner 0
+skinparam ArrowColor #000000
+skinparam ArrowFontColor #000000
 skinparam ArrowFontSize 11
 
 skinparam usecase {
-  BackgroundColor #F1F5F9
-  BorderColor #94A3B8
-  FontColor #1E293B
-  BorderThickness 1.2
-  BackgroundColor<<critico>> #DBEAFE
-  BorderColor<<critico>> #1D4ED8
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  BackgroundColor<<critico>> #E8E8E8
+  BorderColor<<critico>> #000000
   BorderThickness<<critico>> 2.5
   BackgroundColor<<propuesto>> #FFFFFF
-  BorderColor<<propuesto>> #CBD5E1
-  FontColor<<propuesto>> #64748B
+  BorderColor<<propuesto>> #9A9A9A
+  FontColor<<propuesto>> #5A5A5A
 }
 skinparam rectangle {
-  BorderColor #94A3B8
+  BorderColor #000000
   BackgroundColor #FFFFFF
-  FontColor #334155
-  FontSize 15
-  FontStyle bold
+  FontColor #000000
+  FontSize 14
 }
 skinparam package {
-  BorderColor #E2E8F0
+  BorderColor #9A9A9A
   BackgroundColor #FFFFFF
-  FontColor #64748B
+  FontColor #5A5A5A
   FontSize 12
 }
 

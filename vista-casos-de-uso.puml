@@ -10,44 +10,43 @@
 
 left to right direction
 
+' Estilo alineado con la Figura 3 de la plantilla (sad_tse_2025.pdf):
+' blanco y negro, monigotes para las personas y rectangulo <<actor>> para
+' los sistemas externos, frontera simple.
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam defaultFontName "Segoe UI"
 skinparam defaultFontSize 12
-skinparam ArrowColor #475569
+skinparam roundcorner 0
+skinparam ArrowColor #000000
+skinparam ArrowFontColor #000000
 
 skinparam actor {
-  BorderColor #1E293B
+  BorderColor #000000
   BackgroundColor #FFFFFF
-  FontColor #1E293B
-  FontStyle bold
-  BorderColor<<sistema>> #64748B
-  BackgroundColor<<sistema>> #F1F5F9
-  FontColor<<sistema>> #475569
+  FontColor #000000
 }
 skinparam usecase {
-  BackgroundColor #F1F5F9
-  BorderColor #94A3B8
-  FontColor #1E293B
-  BorderThickness 1.2
-  BackgroundColor<<critico>> #DBEAFE
-  BorderColor<<critico>> #1D4ED8
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  BackgroundColor<<critico>> #E8E8E8
+  BorderColor<<critico>> #000000
   BorderThickness<<critico>> 2.5
   BackgroundColor<<propuesto>> #FFFFFF
-  BorderColor<<propuesto>> #CBD5E1
-  FontColor<<propuesto>> #64748B
+  BorderColor<<propuesto>> #9A9A9A
+  FontColor<<propuesto>> #5A5A5A
 }
 skinparam rectangle {
-  BorderColor #94A3B8
+  BorderColor #000000
   BackgroundColor #FFFFFF
-  FontColor #334155
-  FontSize 15
-  FontStyle bold
+  FontColor #000000
+  FontSize 14
 }
 skinparam package {
-  BorderColor #E2E8F0
+  BorderColor #9A9A9A
   BackgroundColor #FFFFFF
-  FontColor #64748B
+  FontColor #5A5A5A
   FontSize 12
 }
 
@@ -59,11 +58,13 @@ actor "Funcionario de\nFiscalizacion MTOP" as FUNC
 actor "Autoridad MTOP" as AUT
 actor "Administrador" as ADM
 actor "Publico general /\nempresa cliente" as PUB
-' secundarios: sistemas externos y nodos perifericos
-actor "PDI / AGESIC\n(DNIC)" as PDI <<sistema>>
-actor "Usuario gub.uy\n(ID Uruguay)" as GUB <<sistema>>
-actor "Sistema de Balanzas" as BAL <<sistema>>
-actor "Sistema de Tracking" as TRK <<sistema>>
+' secundarios: sistemas externos y nodos perifericos.
+' Como en la Figura 3 de la plantilla, los actores que son sistemas se
+' dibujan como rectangulo con el estereotipo <<actor>>, no como monigote.
+rectangle "<<actor>>\nPDI / AGESIC\n(DNIC)" as PDI
+rectangle "<<actor>>\nUsuario gub.uy\n(ID Uruguay)" as GUB
+rectangle "<<actor>>\nSistema de Balanzas" as BAL
+rectangle "<<actor>>\nSistema de Tracking" as TRK
 
 ' --------------------------- frontera del sistema ---------------------------
 rectangle "carga.uy" {

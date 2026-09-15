@@ -7,15 +7,23 @@ especificación de cada caso de uso.
 Las fuentes son PlantUML (`.puml`); los `.svg` son el render y se versionan para que GitHub
 los muestre.
 
+Todas las figuras siguen el estilo de los ejemplos de la plantilla (`sad_tse_2025.pdf`):
+blanco y negro, monigotes para los actores persona y rectángulo `«actor»` para los actores
+que son sistemas, contenedores `«subsystem»`, componentes con el icono clásico UML y
+ruteo ortogonal en el modelo conceptual.
+
 ---
 
 ## Modelo Conceptual — SAD 2.2
 
 ![Modelo Conceptual](modelo-conceptual.svg)
 
-No lleva identificadores sustitutos (`idUsuario`, `idCaso`, …): son decisiones de
-implementación, no conceptos del dominio. Sólo aparecen los identificadores que existen en
-el negocio — `cedula`, `matricula`, `nroEmpresa`, `nroGuia`, `nroPermiso`.
+Lleva identificadores sustitutos (`idUsuario`, `idCaso`, …) **siguiendo la Figura 2 de la
+plantilla**, que los usa (`-idCiudadano`, `-idIniciativa`, `-idProceso`). La ortodoxia del
+modelado conceptual diría que son implementación y no dominio, pero el ejemplo de referencia
+de la cátedra los incluye y conviene no apartarse. Las entidades que ya tienen clave de
+negocio —`Empresa`, `Vehiculo`, `Permiso`, `Guia`— se identifican por ella
+(`nroEmpresa`, `matricula`, `nroPermiso`, `nroGuia`) y no llevan una sustituta.
 
 ### Decisiones del modelo
 
@@ -62,6 +70,33 @@ validación de CU-07 5b compara m³ contra kg.
 con sólo latitud y longitud no hay dimensión por la cual agrupar.
 
 ---
+
+## Vista Lógica — SAD 6.1
+
+![Vista Lógica](vista-logica.svg)
+
+Arquitectura General del Sistema (Figura 4). Diagrama de componentes con los clasificadores
+`«subsystem»` y `«component»`, como aconseja la plantilla en §6.
+
+Las cajas se derivan, no se inventan: los componentes que la letra ya fija (§2 y §3.7), los
+conectores que fija (§4.1 — SOAP con la PDI, REST con el móvil, request-response con
+balanzas, mensajería con tracking), y los atributos de calidad que **obligan a separar**.
+El caso claro: §3.5.a exige que la detección sea asincrónica *y no degrade la recepción de
+los eventos*, y eso solo ya obliga a que el motor de detección no viva en el camino
+transaccional — el Worker no es gusto, es un requisito.
+
+Cada dependencia lleva el número de RNF que fija ese conector, para que la trazabilidad a la
+letra se lea sin buscar.
+
+**Observabilidad.** El identificador de correlación de §4.4.7 y el trace id de §4.4.9 son
+la misma cosa: se propaga `traceparent` (W3C Trace Context) desde el móvil hasta el nodo
+periférico y se emite en cada línea de log, con lo que un solo mecanismo cubre los dos
+requisitos. La instrumentación es OpenTelemetry — ésa es la decisión arquitectónica; los
+backends son intercambiables: Jaeger se cambia por Tempo tocando sólo el exportador del
+Collector, sin tocar ningún componente.
+
+Pendientes: los refinamientos 6.2–6.4 (central en capas, ingesta y detección, móvil) y los
+diagramas de secuencia de 6.5.
 
 ## Vista de Casos de Uso — SAD 3.2
 
@@ -171,6 +206,7 @@ servidor público de PlantUML (requiere red; el diagrama se envía a plantuml.co
 
 ```sh
 node tools/render-puml.js modelo-conceptual.puml modelo-conceptual.svg
+node tools/render-puml.js vista-logica.puml vista-logica.svg
 node tools/render-puml.js vista-casos-de-uso.puml vista-casos-de-uso.svg
 node tools/render-puml.js relaciones-include-extend.puml relaciones-include-extend.svg
 ```

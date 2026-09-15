@@ -1,0 +1,109 @@
+@startuml vista-logica
+' ---------------------------------------------------------------------------
+' carga.uy - Vista Logica, Arquitectura General del Sistema
+' Laboratorio TSE 2026 - SAD seccion 6.1 (Figura 4)
+'
+' Estilo alineado con las figuras de la plantilla (sad_tse_2025.pdf):
+' blanco y negro, contenedores <<subsystem>>, componentes con el icono
+' clasico UML, actores alrededor de la frontera y flechas solidas.
+' ---------------------------------------------------------------------------
+
+skinparam componentStyle uml1
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+skinparam roundcorner 0
+skinparam ArrowColor #000000
+skinparam ArrowFontColor #000000
+skinparam ArrowFontSize 10
+
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+}
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+}
+
+' =========================== actores ===========================
+actor "Responsable\nde empresa" as RESP
+actor "Chofer" as CHOF
+actor "Funcionario" as FUNC
+actor "Autoridad" as AUT
+actor "Administrador" as ADM
+actor "Publico general" as PUB
+
+' =========================== clientes ===========================
+rectangle "<<subsystem>>\nFrontoffice Web" as FO
+rectangle "<<subsystem>>\nBackoffice Web" as BO
+rectangle "<<subsystem>>\nComponente Movil" as MOV
+
+' =========================== componente central ===========================
+rectangle "<<subsystem>>\ncomponente central" as CENTRAL {
+  component "API y Servicios\nde Aplicacion" as API
+  component "Worker de Ingesta\ny Deteccion" as WORKER
+  component "Persistencia y\nPista de Auditoria" as PERS
+}
+
+' =========================== nodos perifericos ===========================
+rectangle "<<subsystem>>\nNodo Periferico\nBalanzas" as NBAL
+rectangle "<<subsystem>>\nNodo Periferico\nTracking" as NTRK
+rectangle "<<subsystem>>\nBroker de Mensajeria" as BROKER
+
+' =========================== sistemas externos ===========================
+rectangle "<<actor>>\nUsuario gub.uy" as GUB
+rectangle "<<actor>>\nPDI / AGESIC" as PDI
+
+' =========================== observabilidad ===========================
+rectangle "<<subsystem>>\nPlataforma de Observabilidad" as OBS {
+  component "OpenTelemetry\nCollector" as OTEL
+  component "Prometheus" as PROM
+  component "Jaeger" as JAEGER
+  component "Grafana" as GRAF
+}
+
+' =========================== actores a sus canales ===========================
+RESP --> FO
+FUNC --> FO
+PUB --> FO
+AUT --> BO
+ADM --> BO
+CHOF --> MOV
+
+' =========================== dependencias ===========================
+FO --> API : IWeb\nREST/HTTPS
+BO --> API : IWeb\nREST/HTTPS
+MOV --> API : IMovil\nREST/HTTPS (4.1.2)
+
+API --> GUB : IIdentidad\nOpenID Connect (3.7.4)
+API --> PDI : IDatosPersona\nSOAP (4.1.1)
+WORKER --> NBAL : IPesajes\nrequest-response (4.1.3)
+
+NTRK --> BROKER : IPosiciones\none-way (4.1.4)
+BROKER --> WORKER : consume, idempotente\ny ordenado por timestamp
+
+API --> PERS
+WORKER --> PERS
+API --> WORKER : encola la evaluacion\nasincronica (3.5.a)
+
+' =========================== observabilidad ===========================
+CENTRAL --> OTEL : ITelemetria (OTLP)
+MOV --> OTEL : ITelemetria
+NBAL --> OTEL : ITelemetria
+NTRK --> OTEL : ITelemetria
+OTEL --> JAEGER : trazas
+OTEL --> PROM : metricas
+PROM --> CENTRAL : scrapea IMetricas\ne IHealth (4.4.8)
+GRAF --> PROM
+GRAF --> JAEGER
+
+@enduml

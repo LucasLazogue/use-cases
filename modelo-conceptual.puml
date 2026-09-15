@@ -10,51 +10,58 @@
 
 hide circle
 skinparam classAttributeIconSize 0
+skinparam linetype ortho
 skinparam backgroundColor #FFFFFF
 skinparam shadowing false
 skinparam defaultFontName "Segoe UI"
 skinparam defaultFontSize 12
-skinparam ArrowColor #475569
-skinparam ArrowFontColor #64748B
+skinparam roundcorner 0
+skinparam ArrowColor #000000
+skinparam ArrowFontColor #000000
 skinparam ArrowFontSize 11
 
 skinparam class {
-  BackgroundColor #F8FAFC
-  BorderColor #94A3B8
-  FontColor #1E293B
-  AttributeFontColor #334155
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  AttributeFontColor #000000
   AttributeFontSize 11
-  BackgroundColor<<clave>> #DBEAFE
-  BorderColor<<clave>> #1D4ED8
+  BackgroundColor<<clave>> #E8E8E8
+  BorderColor<<clave>> #000000
 }
 skinparam package {
-  BorderColor #E2E8F0
+  BorderColor #9A9A9A
   BackgroundColor #FFFFFF
-  FontColor #64748B
+  FontColor #5A5A5A
   FontSize 12
 }
 
 package "Usuarios y empresas" {
 
   abstract class Usuario {
+    idUsuario
     correo
     estado
   }
   class Ciudadano {
+    idCiudadano
     cedula
     fechaNacimiento
     estadoValidacion
   }
 
   class UsuarioInterno {
+    idUsuarioInterno
     nombreUsuario
   }
 
   class Rol {
+    idRol
     nombre
   }
 
   class VinculoEmpresa <<clave>> {
+    idVinculo
     rol
     estado
     desde
@@ -69,12 +76,14 @@ package "Usuarios y empresas" {
     estado
   }
   class IdentidadRegistral {
+    idIdentidad
     razonSocial
     nroEmpresa
     vigenteDesde
     vigenteHasta
   }
   class Rubro {
+    idRubro
     nombre
   }
 }
@@ -94,6 +103,7 @@ package "Flota" {
     validoHasta
   }
   class ITV {
+    idITV
     fechaRealizacion
     fechaVencimiento
   }
@@ -109,19 +119,23 @@ package "Viajes y eventos" {
   }
 
   class Ubicacion {
+    idUbicacion
     latitud
     longitud
     departamento
   }
   class TipoCarga {
+    idTipoCarga
     nombre
   }
   class Viaje {
+    idViaje
     estado
     fechaInicio
     fechaFin
   }
   abstract class Evento {
+    idEvento
     idDispositivo
     timestampGeneracion
     timestampRecepcion
@@ -142,13 +156,16 @@ package "Viajes y eventos" {
 
 package "Pesajes" {
   class Peaje {
+    idPeaje
     nombre
     ubicacion
   }
   class Balanza {
+    idBalanza
     identificador
   }
   class Pesaje {
+    idPesaje
     pesoRegistrado
     fechaHora
   }
@@ -156,16 +173,19 @@ package "Pesajes" {
 
 package "Fiscalizacion" {
   class ReglaFiscalizacion {
+    idRegla
     tipo
     activa
   }
   class ParametroRegla {
+    idParametro
     nombre
     valor
     vigenteDesde
   }
 
   class CasoFiscalizacion <<clave>> {
+    idCaso
     estado
     fechaDeteccion
     fechaNotificacion
@@ -174,21 +194,25 @@ package "Fiscalizacion" {
   }
 
   class Descargo {
+    idDescargo
     texto
     adjuntos
     fechaPresentacion
   }
   class Resolucion {
+    idResolucion
     resultado
     fundamento
     fecha
   }
   class Acta {
+    idActa
     numero
     fechaEmision
     firma
   }
   class Notificacion {
+    idNotificacion
     canal
     fechaEnvio
     estadoEntrega
@@ -197,17 +221,20 @@ package "Fiscalizacion" {
 
 package "Transversal" {
   class PistaAuditoria {
+    idRegistro
     accion
     fundamento
     timestamp
   }
 
   class Exportacion {
+    idExportacion
     formato
     fechaSolicitud
     estado
   }
   class NodoPeriferico {
+    idNodo
     nombre
     tipo
     endpoint
@@ -282,8 +309,9 @@ NodoPeriferico "1" --> "*" Balanza : provee
 NodoPeriferico "1" --> "*" EventoPosicion : provee
 
 legend bottom
-  En azul, los conceptos que concentran las decisiones del modelo.
-  Sin identificadores sustitutos: solo los que existen en el dominio.
+  En gris, los conceptos que concentran las decisiones del modelo.
+  Empresa, Vehiculo, Permiso y Guia se identifican por su clave de dominio
+  (nroEmpresa, matricula, nroPermiso, nroGuia) y no llevan identificador sustituto.
 endlegend
 
 @enduml
