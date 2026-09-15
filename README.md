@@ -1,10 +1,69 @@
 # use-cases — carga.uy
 
-Vista de Casos de Uso de la plataforma **carga.uy**, Laboratorio TSE 2026.
-Corresponde a la **sección 3 del SAD**: 3.1 Actores, 3.2 Diagrama de Casos de Uso, y una
-carpeta por caso de uso con su descripción y flujos.
+Artefactos del **Documento de Arquitectura de Software** de la plataforma **carga.uy**,
+Laboratorio TSE 2026: modelo conceptual (SAD 2.2), vista de casos de uso (SAD 3) y la
+especificación de cada caso de uso.
 
-## Vista de Casos de Uso
+Las fuentes son PlantUML (`.puml`); los `.svg` son el render y se versionan para que GitHub
+los muestre.
+
+---
+
+## Modelo Conceptual — SAD 2.2
+
+![Modelo Conceptual](modelo-conceptual.svg)
+
+No lleva identificadores sustitutos (`idUsuario`, `idCaso`, …): son decisiones de
+implementación, no conceptos del dominio. Sólo aparecen los identificadores que existen en
+el negocio — `cedula`, `matricula`, `nroEmpresa`, `nroGuia`, `nroPermiso`.
+
+### Decisiones del modelo
+
+**`VinculoEmpresa` en vez de una clase `Chofer`.** Chofer y responsable no son subtipos de
+ciudadano: son **roles dentro de una empresa**. Modelarlos por herencia hace imposible
+expresar CU-04 4c — un ciudadano es responsable de **una** empresa y chofer de **varias**.
+El vínculo además lleva `estado`, que cubre la asociación pendiente de CU-04 4a: se crea
+antes de que el ciudadano se autentique por primera vez y se activa en su primer ingreso.
+
+**`EventoPosicion` se asocia a `Vehiculo` (1) y a `Viaje` (0..1), no se compone en el viaje.**
+Si todo evento perteneciera a un viaje, no se podría ni persistir una posición de un vehículo
+sin viaje en curso — que es exactamente el hecho que dispara la regla *"viaje sin Guía"*
+(3.5.8). Los `EventoViaje`, en cambio, sí se componen en el viaje: no existen sin él.
+
+**`plazoVence` vive en `CasoFiscalizacion`, no en `Descargo`.** El plazo arranca cuando el
+caso pasa a *notificada* (CU-11 paso 8) y corre aunque no haya descargo: CU-12 4a resuelve
+el caso sin él. Si el plazo viviera en `Descargo`, no existiría hasta que alguien presentara
+uno.
+
+**`umbralesAplicados` en el caso.** CU-17 5a decide que los casos ya generados no se
+recalculan al cambiar los umbrales. Para que eso sea verificable, el caso guarda una copia
+de los valores vigentes al momento de detectar, no una referencia a la regla.
+
+**`ParametroRegla` en vez de un único atributo `umbral`.** La regla de desvío tiene **dos**
+parámetros —radio del corredor y tiempo continuo fuera— y 3.6.5 exige poder cambiarlos sin
+redesplegar.
+
+**`Permiso` e `ITV` como histórico compuesto en `Vehiculo`.** Hay que poder determinar si el
+vehículo estaba habilitado **a la fecha de un viaje pasado** (3.5.7), aunque hoy tenga la
+habilitación renovada. Un campo que se pisa no lo permite.
+
+**La evidencia es asociación, no dependencia.** El caso **persiste** su evidencia (CU-11
+paso 7, CU-12 paso 2); una dependencia `..>` expresaría un "usa" transitorio.
+
+**Los roles se modelan una sola vez.** Las subclases de `Usuario` distinguen únicamente el
+**mecanismo de autenticación** —`Ciudadano` por gub.uy, `UsuarioInterno` por credenciales
+propias (3.6.1)—, y el rol funcional va en `Rol` y en `VinculoEmpresa.rol`.
+
+**`Guia` lleva `pesoDeclarado` además de `volumen`.** La capacidad de carga se compara contra
+un peso (3.5.6); el volumen alimenta el reporte por rubro (3.6.2). Con sólo `volumen` la
+validación de CU-07 5b compara m³ contra kg.
+
+**`Ubicacion` incluye `departamento`.** El dashboard filtra por ubicación geográfica (3.6.2);
+con sólo latitud y longitud no hay dimensión por la cual agrupar.
+
+---
+
+## Vista de Casos de Uso — SAD 3.2
 
 ![Vista de Casos de Uso](vista-casos-de-uso.svg)
 
@@ -24,7 +83,7 @@ Dirección de las relaciones (UML 2): **`«include»` va del caso base al inclui
 siempre lo ejecuta; **`«extend»` va del extensor al extendido** — se ejecuta sólo bajo cierta
 condición. En UML 1.x la relación `«include»` se llamaba `«uses»`.
 
-## Actores
+## Actores — SAD 3.1
 
 | Actor | Tipo | Canal |
 |---|---|---|
@@ -89,6 +148,10 @@ intervenga el mayor número de componentes arquitectónicos y los más complejos
 | 1 | **CU-09** Sincronizar los eventos del móvil | Componente móvil, REST sobre HTTPS, persistencia local, idempotencia y resolución de conflictos |
 | 2 | **CU-11** Detectar un incumplimiento | Mensajería asincrónica, Sistema de Balanzas, pista de auditoría, notificación y umbrales parametrizables |
 
+Crítico significa **arquitectónicamente significativo** —el caso de uso que *ejercita* los
+elementos de las vistas—, no el más importante para el negocio ni aquel sin el cual el
+sistema no funciona.
+
 ## Casos de uso
 
 | Carpeta | Caso de uso | Letra |
@@ -97,17 +160,17 @@ intervenga el mayor número de componentes arquitectónicos y los más complejos
 
 ## Cómo regenerar los diagramas
 
-Las fuentes son PlantUML (`.puml`); los `.svg` son el render y se versionan para que GitHub
-los muestre. Con PlantUML instalado localmente:
+Con PlantUML instalado localmente:
 
 ```sh
-plantuml -tsvg vista-casos-de-uso.puml relaciones-include-extend.puml
+plantuml -tsvg *.puml
 ```
 
 Sin instalar nada, [`tools/render-puml.js`](tools/render-puml.js) renderiza contra el
 servidor público de PlantUML (requiere red; el diagrama se envía a plantuml.com):
 
 ```sh
+node tools/render-puml.js modelo-conceptual.puml modelo-conceptual.svg
 node tools/render-puml.js vista-casos-de-uso.puml vista-casos-de-uso.svg
 node tools/render-puml.js relaciones-include-extend.puml relaciones-include-extend.svg
 ```

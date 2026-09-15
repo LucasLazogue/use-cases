@@ -1,0 +1,289 @@
+@startuml modelo-conceptual
+' ---------------------------------------------------------------------------
+' carga.uy - Modelo Conceptual
+' Laboratorio TSE 2026 - Documento de Arquitectura de Software, seccion 2.2
+'
+' Modelo del dominio: no lleva identificadores sustitutos (idX) ni detalles de
+' implementacion. Solo aparecen los identificadores que existen en el negocio
+' (cedula, matricula, nroEmpresa, nroGuia, nroPermiso).
+' ---------------------------------------------------------------------------
+
+hide circle
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+skinparam ArrowColor #475569
+skinparam ArrowFontColor #64748B
+skinparam ArrowFontSize 11
+
+skinparam class {
+  BackgroundColor #F8FAFC
+  BorderColor #94A3B8
+  FontColor #1E293B
+  AttributeFontColor #334155
+  AttributeFontSize 11
+  BackgroundColor<<clave>> #DBEAFE
+  BorderColor<<clave>> #1D4ED8
+}
+skinparam package {
+  BorderColor #E2E8F0
+  BackgroundColor #FFFFFF
+  FontColor #64748B
+  FontSize 12
+}
+
+package "Usuarios y empresas" {
+
+  abstract class Usuario {
+    correo
+    estado
+  }
+  class Ciudadano {
+    cedula
+    fechaNacimiento
+    estadoValidacion
+  }
+
+  class UsuarioInterno {
+    nombreUsuario
+  }
+
+  class Rol {
+    nombre
+  }
+
+  class VinculoEmpresa <<clave>> {
+    rol
+    estado
+    desde
+    hasta
+  }
+
+  class Empresa {
+    nroEmpresa
+    nombrePublico
+    razonSocial
+    direccionPrincipal
+    estado
+  }
+  class IdentidadRegistral {
+    razonSocial
+    nroEmpresa
+    vigenteDesde
+    vigenteHasta
+  }
+  class Rubro {
+    nombre
+  }
+}
+
+package "Flota" {
+  class Vehiculo {
+    matricula
+    marca
+    modelo
+    pesoVehiculo
+    capacidadCarga
+    estado
+  }
+  class Permiso {
+    nroPermiso
+    validoDesde
+    validoHasta
+  }
+  class ITV {
+    fechaRealizacion
+    fechaVencimiento
+  }
+}
+
+package "Viajes y eventos" {
+  class Guia <<clave>> {
+    nroGuia
+    fecha
+    volumen
+    pesoDeclarado
+    recorridoEsperado
+  }
+
+  class Ubicacion {
+    latitud
+    longitud
+    departamento
+  }
+  class TipoCarga {
+    nombre
+  }
+  class Viaje {
+    estado
+    fechaInicio
+    fechaFin
+  }
+  abstract class Evento {
+    idDispositivo
+    timestampGeneracion
+    timestampRecepcion
+  }
+
+  class EventoPosicion {
+    latitud
+    longitud
+  }
+  class EventoViaje {
+    tipo
+  }
+  class Incidente {
+    descripcion
+    fotografia
+  }
+}
+
+package "Pesajes" {
+  class Peaje {
+    nombre
+    ubicacion
+  }
+  class Balanza {
+    identificador
+  }
+  class Pesaje {
+    pesoRegistrado
+    fechaHora
+  }
+}
+
+package "Fiscalizacion" {
+  class ReglaFiscalizacion {
+    tipo
+    activa
+  }
+  class ParametroRegla {
+    nombre
+    valor
+    vigenteDesde
+  }
+
+  class CasoFiscalizacion <<clave>> {
+    estado
+    fechaDeteccion
+    fechaNotificacion
+    plazoVence
+    umbralesAplicados
+  }
+
+  class Descargo {
+    texto
+    adjuntos
+    fechaPresentacion
+  }
+  class Resolucion {
+    resultado
+    fundamento
+    fecha
+  }
+  class Acta {
+    numero
+    fechaEmision
+    firma
+  }
+  class Notificacion {
+    canal
+    fechaEnvio
+    estadoEntrega
+  }
+}
+
+package "Transversal" {
+  class PistaAuditoria {
+    accion
+    fundamento
+    timestamp
+  }
+
+  class Exportacion {
+    formato
+    fechaSolicitud
+    estado
+  }
+  class NodoPeriferico {
+    nombre
+    tipo
+    endpoint
+    estado
+  }
+}
+
+' --------------------------- usuarios y empresas ---------------------------
+Usuario <|-- Ciudadano
+Usuario <|-- UsuarioInterno
+Usuario "*" -- "*" Rol : tiene
+
+Ciudadano "1" -- "*" VinculoEmpresa
+VinculoEmpresa "*" -- "1" Empresa
+Empresa "1" *-- "*" IdentidadRegistral : conserva su historico
+Empresa "*" --> "1" Rubro : pertenece a
+
+' --------------------------- flota ---------------------------
+Empresa "1" *-- "*" Vehiculo : posee
+Vehiculo "1" *-- "*" Permiso : habilitado por
+Vehiculo "1" *-- "*" ITV : inspeccionado por
+
+' --------------------------- viajes ---------------------------
+Empresa "1" --> "*" Guia : emite
+Ciudadano "1" --> "*" Guia : registra «responsable»
+Guia "*" --> "1" Rubro : rubro del cliente
+Guia "*" --> "1" TipoCarga : declara
+Guia "*" --> "1" Ubicacion : origen
+Guia "*" --> "1" Ubicacion : destino
+Guia "1" -- "0..1" Viaje : ampara
+
+Viaje "*" --> "1" Vehiculo : asignado a
+Viaje "*" --> "1" Ciudadano : conducido por «chofer»
+
+Evento <|-- EventoPosicion
+Evento <|-- EventoViaje
+EventoViaje <|-- Incidente
+
+Viaje "1" *-- "*" EventoViaje : registra
+EventoPosicion "*" --> "1" Vehiculo : reporta
+EventoPosicion "*" --> "0..1" Viaje : durante
+
+' --------------------------- pesajes ---------------------------
+Peaje "1" *-- "*" Balanza : ubica
+Balanza "1" --> "*" Pesaje : registra
+Vehiculo "1" --> "*" Pesaje : pesado en
+
+' --------------------------- fiscalizacion ---------------------------
+ReglaFiscalizacion "1" *-- "*" ParametroRegla : se configura con
+ReglaFiscalizacion "1" --> "*" CasoFiscalizacion : detecta
+
+CasoFiscalizacion "*" --> "1" Vehiculo : sobre
+CasoFiscalizacion "*" --> "0..1" Viaje : sobre
+CasoFiscalizacion "*" --> "1" Empresa : imputa a
+
+CasoFiscalizacion "*" -- "*" Pesaje : evidencia
+CasoFiscalizacion "*" -- "*" Evento : evidencia
+
+CasoFiscalizacion "1" *-- "0..1" Descargo : recibe
+Ciudadano "1" --> "*" Descargo : presenta «responsable»
+CasoFiscalizacion "1" *-- "0..1" Resolucion : resuelto por
+Ciudadano "1" --> "*" Resolucion : emite «funcionario»
+Resolucion "1" --> "0..1" Acta : emite si confirma
+CasoFiscalizacion "1" --> "*" Notificacion : notifica
+Notificacion "*" --> "1" Usuario : dirigida a
+
+' --------------------------- transversal ---------------------------
+Usuario "1" --> "*" PistaAuditoria : origina
+CasoFiscalizacion "1" --> "*" PistaAuditoria : auditado en
+Usuario "1" --> "*" Exportacion : solicita
+NodoPeriferico "1" --> "*" Balanza : provee
+NodoPeriferico "1" --> "*" EventoPosicion : provee
+
+legend bottom
+  En azul, los conceptos que concentran las decisiones del modelo.
+  Sin identificadores sustitutos: solo los que existen en el dominio.
+endlegend
+
+@enduml
